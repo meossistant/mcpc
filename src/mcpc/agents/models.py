@@ -24,6 +24,8 @@ class AgentPlugin(BaseModel):
     source_dir: str
     skills: list[str] = []
     mcp_servers: list[str] = []
+    agents: list[AgentType] = []
+    sources: list[str] = []
 
 
 class AgentSkill(BaseModel):
@@ -36,6 +38,8 @@ class AgentSkill(BaseModel):
     description: str = ""
     path: str
     content: str = ""
+    agents: list[AgentType] = []
+    sources: list[str] = []
 
 
 class AgentInfo(BaseModel):

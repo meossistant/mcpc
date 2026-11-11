@@ -96,12 +96,24 @@ def load_config(
         agent_mode if agent_mode is not None and agent_mode != "none" else settings.agent_mode
     )
     if active_agent_mode and active_agent_mode != "none":
-        from mcpc.agents.discovery import load_all_agent_servers
+        from mcpc.agents.discovery import _get_server_endpoint_key, load_all_agent_servers
 
         agent_servers = load_all_agent_servers(active_agent_mode, root, warnings)
+        existing_endpoints: dict[str, str] = {
+            _get_server_endpoint_key(s): s.name for s in servers.values()
+        }
         for s in agent_servers:
+            endpoint_key = _get_server_endpoint_key(s)
+            if endpoint_key in existing_endpoints:
+                orig_name = existing_endpoints[endpoint_key]
+                orig = servers[orig_name]
+                merged_tags = list(dict.fromkeys(orig.tags + s.tags))
+                servers[orig_name] = orig.model_copy(update={"tags": merged_tags})
+                continue
+
             if s.name not in servers:
                 servers[s.name] = s
+                existing_endpoints[endpoint_key] = s.name
             else:
                 agent_tag = (
                     s.tags[0].split(":")[-1] if (s.tags and s.tags[0].startswith("agent:")) else "agent"
@@ -109,6 +121,7 @@ def load_config(
                 prefixed = f"{agent_tag}-{s.name}"
                 if prefixed not in servers:
                     servers[prefixed] = s.model_copy(update={"name": prefixed})
+                    existing_endpoints[endpoint_key] = prefixed
 
     return LoadedConfig(
         workspace_root=root,

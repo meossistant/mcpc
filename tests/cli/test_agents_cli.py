@@ -73,3 +73,28 @@ def test_mcpc_server_import_agent_mode(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     data = json.loads(result.stdout)
     assert any(s["name"] == "mock-server" for s in data["servers"])
+
+
+def test_mcpc_skills_raw_flag() -> None:
+    res_dedup = runner.invoke(app, ["--json", "skills"])
+    assert res_dedup.exit_code == 0
+    data_dedup = json.loads(res_dedup.stdout)
+
+    res_raw = runner.invoke(app, ["--json", "skills", "--raw"])
+    assert res_raw.exit_code == 0
+    data_raw = json.loads(res_raw.stdout)
+
+    # Raw count should be greater than or equal to deduplicated count
+    assert len(data_raw["skills"]) >= len(data_dedup["skills"])
+
+
+def test_mcpc_plugins_raw_flag() -> None:
+    res_dedup = runner.invoke(app, ["--json", "plugins"])
+    assert res_dedup.exit_code == 0
+    data_dedup = json.loads(res_dedup.stdout)
+
+    res_raw = runner.invoke(app, ["--json", "plugins", "--raw"])
+    assert res_raw.exit_code == 0
+    data_raw = json.loads(res_raw.stdout)
+
+    assert len(data_raw["plugins"]) >= len(data_dedup["plugins"])

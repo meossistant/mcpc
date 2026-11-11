@@ -40,10 +40,11 @@ async def _plugins_body(
     name: str | None = None,
     agent: str | None = None,
     enabled_only: bool = False,
+    raw: bool = False,
 ) -> None:
     """List or inspect coding agent plugins."""
     mode = agent if agent else ("all" if c.agent == "none" else c.agent)
-    plugins = discover_all_plugins(mode, c.workspace)
+    plugins = discover_all_plugins(mode, c.workspace, deduplicate=not raw)
 
     if enabled_only:
         plugins = [p for p in plugins if p.enabled]
@@ -54,18 +55,25 @@ async def _plugins_body(
             raise NotFoundError(f"plugin '{name}' not found under agent mode '{mode}'")
 
         def _render_plugin_text() -> str:
+            agents_str = ", ".join(target.agents) if target.agents else target.agent
             lines = [
                 f"Plugin:      {target.name}",
-                f"Agent:       {target.agent}",
+                f"Agent(s):    {agents_str}",
                 f"Version:     {target.version or '-'}",
                 f"Status:      {'enabled' if target.enabled else 'disabled'}",
                 f"Author:      {target.author or '-'}",
                 f"Homepage:    {target.homepage or '-'}",
                 f"Directory:   {target.source_dir}",
-                f"Description: {target.description or '(no description)'}",
-                f"Servers:     {', '.join(target.mcp_servers) if target.mcp_servers else '(none)'}",
-                f"Skills:      {', '.join(target.skills) if target.skills else '(none)'}",
             ]
+            if len(target.sources) > 1:
+                lines.append(f"All Sources: {', '.join(target.sources)}")
+            lines.extend(
+                [
+                    f"Description: {target.description or '(no description)'}",
+                    f"Servers:     {', '.join(target.mcp_servers) if target.mcp_servers else '(none)'}",
+                    f"Skills:      {', '.join(target.skills) if target.skills else '(none)'}",
+                ]
+            )
             return "\n".join(lines)
 
         c.emit(text=_render_plugin_text, data=target.model_dump(mode="json"))
@@ -75,21 +83,22 @@ async def _plugins_body(
         if not plugins:
             return "No plugins found."
         col_name = max(len("NAME"), max(len(p.name) for p in plugins))
-        col_agent = max(len("AGENT"), max(len(p.agent) for p in plugins))
+        agent_strs = [", ".join(p.agents) if p.agents else p.agent for p in plugins]
+        col_agent = max(len("AGENT"), max(len(a) for a in agent_strs))
         col_ver = max(len("VER"), max(len(p.version or "-") for p in plugins))
         header = (
             f"{'NAME':<{col_name}}  {'AGENT':<{col_agent}}  "
             f"{'VER':<{col_ver}}  STATUS    SERVERS  SKILLS  DESCRIPTION"
         )
         rows = [header, "-" * len(header)]
-        for p in plugins:
+        for p, ag_str in zip(plugins, agent_strs, strict=False):
             status = "enabled" if p.enabled else "disabled"
             desc = (p.description or "").replace("\n", " ").strip()
             if len(desc) > 50:
                 desc = desc[:47] + "..."
             ver = p.version or "-"
             row = (
-                f"{p.name:<{col_name}}  {p.agent:<{col_agent}}  {ver:<{col_ver}}  "
+                f"{p.name:<{col_name}}  {ag_str:<{col_agent}}  {ver:<{col_ver}}  "
                 f"{status:<8}  {len(p.mcp_servers):<7}  {len(p.skills):<6}  {desc}"
             )
             rows.append(row)
@@ -105,10 +114,11 @@ async def _skills_body(
     agent: str | None = None,
     plugin: str | None = None,
     full: bool = False,
+    raw: bool = False,
 ) -> None:
     """List or show coding agent skills."""
     mode = agent if agent else ("all" if c.agent == "none" else c.agent)
-    skills = discover_all_skills(mode, c.workspace)
+    skills = discover_all_skills(mode, c.workspace, deduplicate=not raw)
 
     if plugin:
         skills = [s for s in skills if s.plugin_name and s.plugin_name.lower() == plugin.lower()]
@@ -119,16 +129,23 @@ async def _skills_body(
             raise NotFoundError(f"skill '{name}' not found under agent mode '{mode}'")
 
         def _render_skill_text() -> str:
+            agents_str = ", ".join(target.agents) if target.agents else target.agent
             lines = [
                 f"Skill:       {target.name}",
-                f"Agent:       {target.agent}",
+                f"Agent(s):    {agents_str}",
                 f"Plugin:      {target.plugin_name or '-'}",
                 f"Path:        {target.path}",
-                f"Description: {target.description or '(no description)'}",
-                "",
-                "--- Content ---",
-                target.content,
             ]
+            if len(target.sources) > 1:
+                lines.append(f"All Sources: {', '.join(target.sources)}")
+            lines.extend(
+                [
+                    f"Description: {target.description or '(no description)'}",
+                    "",
+                    "--- Content ---",
+                    target.content,
+                ]
+            )
             return "\n".join(lines)
 
         c.emit(text=_render_skill_text, data=target.model_dump(mode="json"))
@@ -138,16 +155,17 @@ async def _skills_body(
         if not skills:
             return "No skills found."
         col_name = max(len("NAME"), max(len(s.name) for s in skills))
-        col_agent = max(len("AGENT"), max(len(s.agent) for s in skills))
+        agent_strs = [", ".join(s.agents) if s.agents else s.agent for s in skills]
+        col_agent = max(len("AGENT"), max(len(a) for a in agent_strs))
         col_plugin = max(len("PLUGIN"), max(len(s.plugin_name or "-") for s in skills))
         header = f"{'NAME':<{col_name}}  {'AGENT':<{col_agent}}  {'PLUGIN':<{col_plugin}}  DESCRIPTION"
         rows = [header, "-" * len(header)]
-        for s in skills:
+        for s, ag_str in zip(skills, agent_strs, strict=False):
             desc = (s.description or "").replace("\n", " ").strip()
             if not full and len(desc) > 60:
                 desc = desc[:57] + "..."
             plugin_str = s.plugin_name or "-"
-            rows.append(f"{s.name:<{col_name}}  {s.agent:<{col_agent}}  {plugin_str:<{col_plugin}}  {desc}")
+            rows.append(f"{s.name:<{col_name}}  {ag_str:<{col_agent}}  {plugin_str:<{col_plugin}}  {desc}")
         return "\n".join(rows)
 
     data = {"skills": [s.model_dump(mode="json") for s in skills]}
