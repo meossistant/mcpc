@@ -102,7 +102,7 @@ def test_no_matches(ws: Path) -> None:
 def test_no_matches_json(ws: Path) -> None:
     result = run(ws, "--json", "search", "zzzqqq")
     assert result.exit_code == 0
-    assert json.loads(result.stdout) == {"query": "zzzqqq", "type": "tool", "results": []}
+    assert json.loads(result.stdout) == {"query": "zzzqqq", "type": "all", "results": []}
 
 
 def test_json_output_shape(ws: Path) -> None:
@@ -110,10 +110,15 @@ def test_json_output_shape(ws: Path) -> None:
     assert result.exit_code == 0, result.stderr
     data = json.loads(result.stdout)
     assert data["query"] == "find a book by author"
-    assert data["type"] == "tool"
+    assert data["type"] == "all"
     top = data["results"][0]
     assert (top["server"], top["tool"]) == ("bookshop", "search_books")
     assert top["score"] > 0 and top["summary"]
+
+    # Explicit --type tool produces type="tool"
+    result_tool = run(ws, "--json", "search", "find a book by author", "--type", "tool")
+    assert result_tool.exit_code == 0
+    assert json.loads(result_tool.stdout)["type"] == "tool"
 
 
 def test_json_server_type(ws: Path) -> None:
@@ -122,6 +127,26 @@ def test_json_server_type(ws: Path) -> None:
     assert data["type"] == "server"
     assert data["results"][0]["server"] == "bookshop"
     assert data["results"][0]["top_tools"]
+
+
+def test_search_type_mcp(ws: Path) -> None:
+    result = run(ws, "--json", "search", "find a book by author", "--type", "mcp")
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert data["type"] == "mcp"
+    assert any(r["kind"] == "tool" for r in data["results"])
+
+
+def test_search_type_skills_and_plugins(ws: Path) -> None:
+    res_skills = run(ws, "--json", "search", "nanopi", "--type", "skill")
+    assert res_skills.exit_code == 0
+    data_skills = json.loads(res_skills.stdout)
+    assert data_skills["type"] == "skill"
+
+    res_plugins = run(ws, "--json", "search", "gemini", "--type", "plugin")
+    assert res_plugins.exit_code == 0
+    data_plugins = json.loads(res_plugins.stdout)
+    assert data_plugins["type"] == "plugin"
 
 
 def test_untrusted_workspace_server_is_not_started(

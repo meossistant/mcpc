@@ -187,6 +187,63 @@ def server_hits_json(query: str, hits: Sequence[Any]) -> Builder:
     return _dump(s.SearchOutput(query=query, type="server", results=results))
 
 
+def skill_hits_json(query: str, hits: Sequence[Any]) -> Builder:
+    """`mcpc search --type skill --json`."""
+    results = [
+        s.SkillHitOutput(
+            name=h.name,
+            score=round(float(h.score), 4),
+            summary=h.summary or "",
+            agents=list(getattr(h, "agents", [])),
+            plugin=getattr(h, "plugin", None),
+            path=getattr(h, "path", ""),
+        )
+        for h in hits
+    ]
+    return _dump(s.SearchOutput(query=query, type="skill", results=results))
+
+
+def plugin_hits_json(query: str, hits: Sequence[Any]) -> Builder:
+    """`mcpc search --type plugin --json`."""
+    results = [
+        s.PluginHitOutput(
+            name=h.name,
+            score=round(float(h.score), 4),
+            summary=h.summary or "",
+            agents=list(getattr(h, "agents", [])),
+            version=getattr(h, "version", None),
+            skills_count=getattr(h, "skills_count", 0),
+            servers_count=getattr(h, "servers_count", 0),
+            source_dir=getattr(h, "source_dir", ""),
+        )
+        for h in hits
+    ]
+    return _dump(s.SearchOutput(query=query, type="plugin", results=results))
+
+
+def unified_hits_json(query: str, hits: Sequence[Any], type_name: str = "all") -> Builder:
+    """`mcpc search --type all --json`."""
+    results = [
+        s.UnifiedHitOutput(
+            kind=getattr(h, "kind", "tool"),
+            target=getattr(
+                h, "target", f"{getattr(h, 'server', '')}/{getattr(h, 'tool', '')}"
+            ),
+            score=round(float(h.score), 4),
+            summary=getattr(h, "summary", "") or getattr(h, "description", ""),
+            server=getattr(h, "server", None),
+            tool=getattr(h, "tool", None),
+            agents=list(getattr(h, "agents", [])),
+            plugin=getattr(h, "plugin", None),
+            version=getattr(h, "version", None),
+            path=getattr(h, "path", None),
+            top_tools=[_tool_hit(t, getattr(h, "server", "")) for t in getattr(h, "top_tools", [])],
+        )
+        for h in hits
+    ]
+    return _dump(s.SearchOutput(query=query, type=type_name, results=results))
+
+
 # --- call / read / prompt ------------------------------------------------------------------------
 
 

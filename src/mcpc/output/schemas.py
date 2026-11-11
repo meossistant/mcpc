@@ -133,10 +133,51 @@ class ServerHitOutput(_Out):
     top_tools: list[ToolHitOutput] = []
 
 
+class SkillHitOutput(_Out):
+    name: str
+    score: float
+    summary: str = ""
+    agents: list[str] = []
+    plugin: str | None = None
+    path: str = ""
+
+
+class PluginHitOutput(_Out):
+    name: str
+    score: float
+    summary: str = ""
+    agents: list[str] = []
+    version: str | None = None
+    skills_count: int = 0
+    servers_count: int = 0
+    source_dir: str = ""
+
+
+class UnifiedHitOutput(_Out):
+    kind: str
+    target: str
+    score: float
+    summary: str = ""
+    server: str | None = None
+    tool: str | None = None
+    agents: list[str] = []
+    plugin: str | None = None
+    version: str | None = None
+    path: str | None = None
+    top_tools: list[ToolHitOutput] = []
+
+
 class SearchOutput(_Out):
     query: str
-    type: Literal["tool", "server"]
-    results: list[ToolHitOutput] | list[ServerHitOutput]
+    type: str
+    results: (
+        list[ToolHitOutput]
+        | list[ServerHitOutput]
+        | list[SkillHitOutput]
+        | list[PluginHitOutput]
+        | list[UnifiedHitOutput]
+        | list[dict[str, Any]]
+    )
 
 
 class CallOutput(_Out):

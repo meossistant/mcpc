@@ -226,7 +226,7 @@ Global options go **before** the command: `mcpc --json call ...`, not `mcpc call
 | `mcpc list [--full] [--all]` | Servers with descriptions. `--full` adds scope, source file, transport, target, status (`ok`, `error`, `untrusted`, `disabled`, `not cached`), protocol version, counts and cache age. `--all` includes disabled servers. Reads the cache; connects only with `--refresh`. |
 | `mcpc show <server> [--full]` | The server's tools with one-line descriptions. `--full` adds parameters, output schemas, resources and prompts. |
 | `mcpc show <server>/<tool>` | Full detail of one tool, ending with an example `call` line. |
-| `mcpc search "<query>" [-n 10] [-s SERVER] [-t tool\|server]` | BM25 search over cached tool and server metadata. |
+| `mcpc search "<query>" [-n 10] [-s SERVER] [-t all\|mcp\|tool\|server\|skill\|plugin]` | BM25 search across tools, servers, skills, and plugins (default: all). |
 | `mcpc call <server>/<tool> [-a k=v]... [--args JSON\|@file\|-]` | Call a tool. Also accepts `mcpc call <server> <tool>`. |
 | `mcpc resources <server>` | List resources and resource templates. |
 | `mcpc read <server> <uri>` | Read one resource. |

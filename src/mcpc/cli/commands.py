@@ -152,9 +152,14 @@ def register_search(app: typer.Typer) -> None:
         query: str = typer.Argument(..., help="What you are looking for, in plain words."),
         limit: int = typer.Option(10, "--limit", "-n", help="Maximum number of results."),
         server: str | None = typer.Option(None, "--server", "-s", help="Only results from this server."),
-        type_: str = typer.Option("tool", "--type", "-t", help="Search for 'tool' or 'server'."),
+        type_: str = typer.Option(
+            "all",
+            "--type",
+            "-t",
+            help="Search category: all, mcp, tool, server, skill, plugin (default: all).",
+        ),
     ) -> None:
-        """Search tools (or servers) across all configured servers with BM25 ranking."""
+        """Search tools, servers, skills, and plugins across configured MCP servers and agents."""
         from mcpc.cli import search as impl
         from mcpc.cli.context import get_ctx, run_command
 

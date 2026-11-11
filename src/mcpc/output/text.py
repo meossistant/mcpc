@@ -367,6 +367,46 @@ def render_server_hits(hits: Sequence[Any]) -> str:
     return "\n".join(lines)
 
 
+def render_skill_hits(hits: Sequence[Any]) -> str:
+    """Ranked `skill_name  summary` lines."""
+    if not hits:
+        return "No matching skills."
+    names = [h.name for h in hits]
+    width = max(len(n) for n in names)
+    return "\n".join(
+        f"{name.ljust(width)}  {_one_line(h.summary)}".rstrip()
+        for name, h in zip(names, hits, strict=True)
+    )
+
+
+def render_plugin_hits(hits: Sequence[Any]) -> str:
+    """Ranked `plugin_name  summary` lines."""
+    if not hits:
+        return "No matching plugins."
+    names = [h.name for h in hits]
+    width = max(len(n) for n in names)
+    return "\n".join(
+        f"{name.ljust(width)}  {_one_line(h.summary)}".rstrip()
+        for name, h in zip(names, hits, strict=True)
+    )
+
+
+def render_unified_hits(hits: Sequence[Any]) -> str:
+    """Ranked `target  [kind]  summary` lines."""
+    if not hits:
+        return "No matching items."
+    targets = [
+        getattr(h, "target", f"{getattr(h, 'server', '')}/{getattr(h, 'tool', '')}") for h in hits
+    ]
+    width = max(len(t) for t in targets)
+    lines: list[str] = []
+    for t, h in zip(targets, hits, strict=True):
+        kind = getattr(h, "kind", "tool")
+        summary = getattr(h, "summary", "") or getattr(h, "description", "")
+        lines.append(f"{t.ljust(width)}  [{kind}]  {_one_line(summary)}".rstrip())
+    return "\n".join(lines)
+
+
 # --- call / read / prompt results ----------------------------------------------------------------
 
 

@@ -82,6 +82,7 @@ With `--json`, a failure also prints `{"error": {"code", "kind", "message", "ser
 - Agent servers are seamlessly indexed by the BM25 search engine and available for tool calls.
 
 ### Dedicated discovery commands
+- `mcpc search "<query>" [-t all|mcp|tool|server|skill|plugin]`: Unified BM25 search across tools, servers, skills, and plugins (default: `all`).
 - `mcpc agents`: Shows status, configurations, and asset counts of detected coding assistants.
 - `mcpc plugins [NAME] [--agent AGENT] [--enabled] [--raw]`: Lists or inspects installed agent plugins.
 - `mcpc skills [NAME] [--agent AGENT] [--plugin PLUGIN] [--full] [--raw]`: Lists skills or renders complete `SKILL.md` content.

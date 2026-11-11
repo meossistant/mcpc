@@ -10,8 +10,9 @@ Global options (`--json`, `--workspace`, `--refresh`, `--timeout`, `--no-daemon`
 
 ## Workflow
 
-1. **Find the tool.** Describe what you need in plain words:
-   `mcpc search "create a github issue"`. To browse instead: `mcpc list` (servers), `mcpc show <server>` (its tools).
+1. **Find what you need.** Describe what you need in plain words:
+   `mcpc search "create a github issue"`. By default, search ranks across tools, servers, skills, and plugins (`-t all`). Use `-t mcp` (tools and servers), `-t skill` (skills), `-t plugin` (plugins), or `-t tool` (only tools).
+   To browse instead: `mcpc list` (servers), `mcpc show <server>` (its tools).
 2. **Read the tool before calling it.** `mcpc show <server>/<tool>` prints the parameters, which are required, defaults, and ends with an example `call` line. Do not guess parameter names.
 3. **Call it.**
    - Simple values: `mcpc call <server>/<tool> -a query=dune -a limit=5`. A value is sent as JSON when it parses (`limit=5` is the integer 5), otherwise as a string.

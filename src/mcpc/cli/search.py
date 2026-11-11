@@ -1,4 +1,4 @@
-"""`mcpc search`: BM25 search over the cached catalog (plan §4.1, §7)."""
+"""`mcpc search`: BM25 search over the cached catalog, skills, and plugins."""
 
 from __future__ import annotations
 
@@ -13,20 +13,86 @@ from mcpc.output import json as out_json
 from mcpc.output import text as out_text
 from mcpc.search.index import CatalogIndex
 
-_TYPES = ("tool", "server")
+_TYPE_ALIASES: dict[str, str] = {
+    "all": "all",
+    "mcp": "mcp",
+    "mcps": "mcp",
+    "tool": "tool",
+    "tools": "tool",
+    "server": "server",
+    "servers": "server",
+    "skill": "skill",
+    "skills": "skill",
+    "plugin": "plugin",
+    "plugins": "plugin",
+}
 
 
 async def _search(c: Ctx, query: str, limit: int, server: str | None, type_: str) -> None:
-    if type_ not in _TYPES:
-        raise UsageError(f"--type must be one of: {', '.join(_TYPES)} (got '{type_}')")
+    norm_type = _TYPE_ALIASES.get(type_.lower().strip())
+    if not norm_type:
+        valid_options = "all, mcp, tool, server, skill, plugin"
+        raise UsageError(f"--type must be one of: {valid_options} (got '{type_}')")
+
     only = c.server(server) if server is not None else None
     configs = c.servers()
     snapshots = await _collect_snapshots(c, configs, only)
-    index = CatalogIndex([(cfg, snapshots.get(cfg.name)) for cfg in configs])
-    if type_ == "server":
-        _emit_servers(c, query, index, limit, server)
-    else:
+
+    skills = []
+    plugins = []
+    if norm_type in ("all", "skill", "plugin"):
+        from mcpc.agents.discovery import discover_all_plugins, discover_all_skills
+
+        agent_mode = c.agent if c.agent != "none" else "all"
+        skills = discover_all_skills(agent_mode, c.workspace, deduplicate=True)
+        plugins = discover_all_plugins(agent_mode, c.workspace, deduplicate=True)
+
+    index = CatalogIndex(
+        [(cfg, snapshots.get(cfg.name)) for cfg in configs],
+        skills=skills,
+        plugins=plugins,
+    )
+
+    if norm_type == "tool":
         _emit_tools(c, query, index, limit, server)
+    elif norm_type == "server":
+        _emit_servers(c, query, index, limit, server)
+    elif norm_type == "skill":
+        _emit_skills(c, query, index, limit)
+    elif norm_type == "plugin":
+        _emit_plugins(c, query, index, limit)
+    elif norm_type == "mcp":
+        _emit_mcp(c, query, index, limit, server)
+    else:
+        _emit_all(c, query, index, limit, server)
+
+
+def _emit_all(
+    c: Ctx, query: str, index: CatalogIndex, limit: int, server: str | None
+) -> None:
+    hits = index.search_all(query, limit=limit, server=server)
+    text = out_text.render_unified_hits(hits) if hits else _no_matches(query)
+    c.emit(text=text, data=out_json.unified_hits_json(query, hits, type_name="all"))
+
+
+def _emit_mcp(
+    c: Ctx, query: str, index: CatalogIndex, limit: int, server: str | None
+) -> None:
+    hits = index.search_mcp(query, limit=limit, server=server)
+    text = out_text.render_unified_hits(hits) if hits else _no_matches(query)
+    c.emit(text=text, data=out_json.unified_hits_json(query, hits, type_name="mcp"))
+
+
+def _emit_skills(c: Ctx, query: str, index: CatalogIndex, limit: int) -> None:
+    hits = index.search_skills(query, limit=limit)
+    text = out_text.render_skill_hits(hits) if hits else _no_matches(query)
+    c.emit(text=text, data=out_json.skill_hits_json(query, hits))
+
+
+def _emit_plugins(c: Ctx, query: str, index: CatalogIndex, limit: int) -> None:
+    hits = index.search_plugins(query, limit=limit)
+    text = out_text.render_plugin_hits(hits) if hits else _no_matches(query)
+    c.emit(text=text, data=out_json.plugin_hits_json(query, hits))
 
 
 def _emit_tools(c: Ctx, query: str, index: CatalogIndex, limit: int, server: str | None) -> None:
