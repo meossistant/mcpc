@@ -1,0 +1,7 @@
+bookshop: Search the catalog before recommending a book.
+tools (5):
+  search_books: Search the catalog by title or author.
+  lookup_book: Look up a book by its exact title.
+  add_review: Add a customer review to a book.
+  cover_image: Return a tiny PNG cover image.
+  crash: Exit the server process abruptly (for crash tests).

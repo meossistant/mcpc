@@ -1,0 +1,56 @@
+bookshop: Search the catalog before recommending a book.
+server: Bookshop 1.0.0 (protocol 2026-07-28)
+instructions:
+  Search the catalog before recommending a book. Second sentence.
+
+tools (5):
+  bookshop/search_books  (Search the catalog)
+    Search the catalog by title or author.
+
+    Returns a short summary of matching books.
+  parameters:
+    query  string  required
+    limit  integer  default: 10
+  output: object {result: string}
+  example: mcpc call bookshop/search_books -a query=<string>
+
+  bookshop/lookup_book
+    Look up a book by its exact title.
+  parameters:
+    title  string  required
+  output: object {title: string, author: string, year: integer}
+  example: mcpc call bookshop/lookup_book -a title=<string>
+
+  bookshop/add_review
+    Add a customer review to a book.
+  parameters:
+    book_title  string  required
+    rating  integer  required
+    comment  string|null  default: null
+    tags  array<string>|null  default: null
+  output: object {result: string}
+  example: mcpc call bookshop/add_review -a book_title=<string> -a rating=<integer>
+
+  bookshop/cover_image
+    Return a tiny PNG cover image.
+  parameters: none
+  example: mcpc call bookshop/cover_image
+
+  bookshop/crash
+    Exit the server process abruptly (for crash tests).
+  parameters: none
+  output: object {result: string}
+  example: mcpc call bookshop/crash
+
+resources (1):
+  genres  catalog://genres  (text/plain)
+    The genres the catalog is organised by.
+
+resource templates (1):
+  books_in_genre  catalog://genres/{genre}  (text/plain)
+    Every title we stock in one genre.
+
+prompts (1):
+  recommend  (Recommend a book)
+    Ask for a recommendation in a genre.
+    genre  required

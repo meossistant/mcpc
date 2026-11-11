@@ -1,0 +1,29 @@
+bookshop
+  description: Search the catalog before recommending a book.
+  status:      ok (protocol 2026-07-28, cached 0.2h ago)
+  scope:       workspace (overrides global)   source: C:\x\.mcpc\mcp.json
+  transport:   stdio   python bookshop_server.py
+  provides:    5 tools, 1 resource, 1 template, 1 prompt
+
+gh
+  description: GitHub issues and pull requests
+  status:      error (connection refused)
+  scope:       global   source: C:\Users\me\.mcpc\mcp.json
+  transport:   streamable-http   https://api.example.com/mcp
+
+local-docs
+  description: Docs from the repo
+  status:      untrusted (run "mcpc trust" in C:\x to allow its MCP servers)
+  scope:       workspace   source: C:\x\.mcpc\mcp.json
+  transport:   stdio   npx -y docs-server
+
+weather
+  status:      not cached
+  scope:       global   source: g
+  transport:   stdio   python w.py
+
+old
+  description: Disabled one
+  status:      disabled
+  scope:       global
+  transport:   sse   http://h/sse

@@ -1,0 +1,5 @@
+bookshop    Search the catalog before recommending a book.
+gh          GitHub issues and pull requests [error]
+local-docs  Docs from the repo [untrusted]
+weather
+old         Disabled one [disabled]

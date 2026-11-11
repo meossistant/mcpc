@@ -1,0 +1,9 @@
+bookshop/search_books  (Search the catalog)
+  Search the catalog by title or author.
+
+  Returns a short summary of matching books.
+parameters:
+  query  string  required
+  limit  integer  default: 10
+output: object {result: string}
+example: mcpc call bookshop/search_books -a query=<string>

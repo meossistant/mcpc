@@ -1,0 +1,9 @@
+bookshop/add_review
+  Add a customer review to a book.
+parameters:
+  book_title  string  required
+  rating  integer  required
+  comment  string|null  default: null
+  tags  array<string>|null  default: null
+output: object {result: string}
+example: mcpc call bookshop/add_review -a book_title=<string> -a rating=<integer>
