@@ -24,6 +24,7 @@ def register_all(app: typer.Typer) -> None:
     register_search(app)
     register_requests(app)
     register_daemon(app)
+    register_agents_cmd(app)
     register_install(app)
 
 
@@ -283,6 +284,52 @@ def register_daemon(app: typer.Typer) -> None:
         run_command(c, lambda: impl._restart_body(c))
 
     app.add_typer(daemon_app, name="daemon")
+
+
+def register_agents_cmd(app: typer.Typer) -> None:
+    """Add agents, plugins, and skills commands to the app."""
+
+    @app.command("agents")
+    def agents_cmd(ctx: typer.Context) -> None:
+        """Show status and assets of supported coding agents (Claude Code, Antigravity CLI)."""
+        from mcpc.cli import agents_cmd as impl
+        from mcpc.cli.context import get_ctx, run_command
+
+        c = get_ctx(ctx)
+        run_command(c, lambda: impl._agents_body(c))
+
+    @app.command("plugins")
+    def plugins_cmd(
+        ctx: typer.Context,
+        name: str | None = typer.Argument(None, help="Plugin name to inspect (or omit to list all)."),
+        agent: str | None = typer.Option(
+            None, "--agent", "-A", help="Filter by agent: all, claude-code, antigravity."
+        ),
+        enabled_only: bool = typer.Option(False, "--enabled", help="Show only enabled plugins."),
+    ) -> None:
+        """List or inspect plugins from coding agents (Antigravity CLI, Claude Code)."""
+        from mcpc.cli import agents_cmd as impl
+        from mcpc.cli.context import get_ctx, run_command
+
+        c = get_ctx(ctx)
+        run_command(c, lambda: impl._plugins_body(c, name, agent, enabled_only))
+
+    @app.command("skills")
+    def skills_cmd(
+        ctx: typer.Context,
+        name: str | None = typer.Argument(None, help="Skill name to show (or omit to list all)."),
+        agent: str | None = typer.Option(
+            None, "--agent", "-A", help="Filter by agent: all, claude-code, antigravity."
+        ),
+        plugin: str | None = typer.Option(None, "--plugin", "-p", help="Filter by plugin name."),
+        full: bool = typer.Option(False, "--full", help="Show complete descriptions without truncation."),
+    ) -> None:
+        """List or view skills from coding agents and plugins."""
+        from mcpc.cli import agents_cmd as impl
+        from mcpc.cli.context import get_ctx, run_command
+
+        c = get_ctx(ctx)
+        run_command(c, lambda: impl._skills_body(c, name, agent, plugin, full))
 
 
 def register_install(app: typer.Typer) -> None:

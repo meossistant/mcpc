@@ -83,6 +83,9 @@ class Settings(BaseModel):
         default=300, validation_alias=AliasChoices("requestTimeout", "request_timeout")
     )
     daemon: DaemonSettings = Field(default_factory=lambda: DaemonSettings())
+    agent_mode: str = Field(
+        default="none", validation_alias=AliasChoices("agentMode", "agent_mode")
+    )
 
 
 class LoadedConfig(BaseModel):
@@ -94,6 +97,7 @@ class LoadedConfig(BaseModel):
     servers: dict[str, ServerConfig]  # includes disabled servers; callers filter
     settings: Settings = Field(default_factory=lambda: Settings())
     warnings: list[str] = []
+    agent_mode: str = "none"
 
     def enabled(self) -> list[ServerConfig]:
         return [s for s in self.servers.values() if not s.disabled]

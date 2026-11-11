@@ -60,11 +60,16 @@ def find_workspace_root(start: Path | None = None) -> Path:
     return origin
 
 
-def load_config(workspace: Path | None = None, config_path: Path | None = None) -> LoadedConfig:
-    """Load and merge the global and workspace config files.
+def load_config(
+    workspace: Path | None = None,
+    config_path: Path | None = None,
+    agent_mode: str | None = None,
+) -> LoadedConfig:
+    """Load and merge the global and workspace config files, plus optional coding agent servers.
 
     `workspace` is an explicit workspace root (`--workspace`); otherwise it is detected from the
     current directory. `config_path` replaces the global file location (`--config`).
+    `agent_mode` specifies coding agent integration: "none", "all", "claude-code", "antigravity".
     """
     root = workspace.expanduser().resolve() if workspace is not None else find_workspace_root()
     global_path = config_path.expanduser() if config_path is not None else paths.global_config_path()
@@ -86,6 +91,25 @@ def load_config(workspace: Path | None = None, config_path: Path | None = None) 
             warnings.append(f"{workspace_path}: 'settings' is only read from the global file; ignored")
 
     servers = _merge(global_entries, workspace_entries, workspace_path, warnings)
+
+    active_agent_mode = (
+        agent_mode if agent_mode is not None and agent_mode != "none" else settings.agent_mode
+    )
+    if active_agent_mode and active_agent_mode != "none":
+        from mcpc.agents.discovery import load_all_agent_servers
+
+        agent_servers = load_all_agent_servers(active_agent_mode, root, warnings)
+        for s in agent_servers:
+            if s.name not in servers:
+                servers[s.name] = s
+            else:
+                agent_tag = (
+                    s.tags[0].split(":")[-1] if (s.tags and s.tags[0].startswith("agent:")) else "agent"
+                )
+                prefixed = f"{agent_tag}-{s.name}"
+                if prefixed not in servers:
+                    servers[prefixed] = s.model_copy(update={"name": prefixed})
+
     return LoadedConfig(
         workspace_root=root,
         global_path=global_path,
@@ -93,6 +117,7 @@ def load_config(workspace: Path | None = None, config_path: Path | None = None) 
         servers=servers,
         settings=settings,
         warnings=warnings,
+        agent_mode=active_agent_mode,
     )
 
 

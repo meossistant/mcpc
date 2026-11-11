@@ -44,6 +44,7 @@ class Ctx:
     timeout: float | None = None
     no_daemon: bool = False
     verbose: bool = False
+    agent: str = "none"
     _loaded: LoadedConfig | None = field(default=None, repr=False)
     _executor: Executor | None = field(default=None, repr=False)
 
@@ -51,7 +52,7 @@ class Ctx:
     def config(self) -> LoadedConfig:
         """Load (once) and return the merged config; warnings go to stderr."""
         if self._loaded is None:
-            self._loaded = loader.load_config(self.workspace, self.config_path)
+            self._loaded = loader.load_config(self.workspace, self.config_path, agent_mode=self.agent)
             for w in self._loaded.warnings:
                 warn(w)
         return self._loaded

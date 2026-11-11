@@ -45,6 +45,9 @@ def _root(
     timeout: float | None = typer.Option(None, "--timeout", help="Request timeout in seconds."),
     no_daemon: bool = typer.Option(False, "--no-daemon", help="Connect directly, don't use the daemon."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose diagnostics on stderr."),
+    agent: str = typer.Option(
+        "none", "--agent", "-A", help="Coding agent mode: none, all, claude-code, antigravity."
+    ),
     version: bool = typer.Option(False, "--version", callback=_version, is_eager=True, help="Show version."),
 ) -> None:
     if scope not in ("all", "global", "workspace"):
@@ -62,6 +65,7 @@ def _root(
         timeout=timeout,
         no_daemon=no_daemon,
         verbose=verbose,
+        agent=agent,
     )
 
 

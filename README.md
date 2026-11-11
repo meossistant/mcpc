@@ -214,6 +214,7 @@ Global options go **before** the command: `mcpc --json call ...`, not `mcpc call
 | `-w, --workspace DIR` | Workspace root (default: detected from the current directory). |
 | `--config PATH` | Global config file. |
 | `--scope all\|global\|workspace` | Which servers to consider (default `all`). |
+| `-A, --agent none\|all\|claude-code\|antigravity` | Coding agent integration mode (default `none`, or set in `settings.agentMode`). |
 | `--refresh` | Ignore the catalog cache and reconnect. |
 | `--timeout SECONDS` | Request timeout for this run. |
 | `--no-daemon` | Connect directly without the daemon. |
@@ -233,6 +234,9 @@ Global options go **before** the command: `mcpc --json call ...`, not `mcpc call
 | `mcpc prompt <server>/<name> [-a k=v]...` | Render a prompt. |
 | `mcpc refresh [server...]` | Reconnect and rebuild the cache, in parallel. |
 | `mcpc check [server...]` | Connect and report protocol version, latency and capabilities. Non-zero exit if any server fails. |
+| `mcpc agents` | Show status and asset breakdown of supported coding agents (Claude Code, Antigravity CLI). |
+| `mcpc plugins [NAME] [--agent AGENT] [--enabled]` | List or inspect plugins from coding agents. |
+| `mcpc skills [NAME] [--agent AGENT] [--plugin PLUGIN] [--full]` | List or view skills (`SKILL.md`) from coding agents and plugins. |
 | `mcpc config` / `mcpc config path` | Merged configuration with each server's source / file locations. |
 | `mcpc trust [-y]` / `mcpc untrust` | Approve or revoke the workspace's servers. |
 | `mcpc daemon start\|stop\|status\|restart` | Control the daemon. |
@@ -339,6 +343,45 @@ daemon stopped
 | `daemon.json` | Daemon pid, port and token. Treat as a secret. |
 | `daemon.lock` | Prevents two CLIs from starting two daemons. |
 | `tmp/` | Saved images, audio and binary content. |
+
+## Coding Agents Integration
+
+`mcpc` can discover and interoperate with plugins, skills, and MCP servers from other coding agents.
+
+### Supported Agents
+
+- **Claude Code**: Reads MCP servers from `~/.claude.json`, `.claude/mcp.json`, and workspace `.mcp.json`. Discovers skills from `~/.claude/skills/` and `~/.agents/skills/`.
+- **Antigravity CLI**: Reads MCP servers from `~/.gemini/config/mcp_config.json`, enabled plugins in `~/.gemini/config/plugins/`, and workspace configs. Discovers all plugin metadata and skills.
+
+### Usage
+
+```bash
+# Overview of detected agents on the system
+mcpc agents
+
+# List all discovered plugins from coding agents
+mcpc plugins
+mcpc plugins cloudflare   # Inspect specific plugin detail
+
+# List and view skills
+mcpc skills
+mcpc skills nanopi        # View full skill document and instructions
+
+# Ingest and call MCP servers from agents
+mcpc --agent all list
+mcpc --agent antigravity show cloudflare
+mcpc --agent claude-code list
+```
+
+To enable agent server ingestion permanently without passing `--agent`, add to `~/.mcpc/mcp.json`:
+
+```json
+{
+  "settings": {
+    "agentMode": "all"
+  }
+}
+```
 
 ## Troubleshooting
 
