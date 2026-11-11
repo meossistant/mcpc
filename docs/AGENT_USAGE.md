@@ -73,6 +73,25 @@ With `--json`, a failure also prints `{"error": {"code", "kind", "message", "ser
 - To give an agent a separate set of servers, point it at another directory with the environment variable `MCPC_HOME`, or use a project-level `.mcpc/mcp.json` (which needs `mcpc trust` for stdio servers).
 - Server problems show up in `~/.mcpc/logs/<server>.log`. `mcpc -v <command>` adds diagnostics on stderr.
 
+## Coding agents integration and deduplication
+
+`mcpc` can discover MCP servers, plugins, and skills from coding agents installed on the system, specifically **Claude Code** and **Google Antigravity CLI**.
+
+### Flag & configuration
+- Add `-A <all|claude-code|antigravity>` to any command (e.g. `mcpc -A all list`, `mcpc -A all search "..."`) or set `"settings": { "agentMode": "all" }` in `~/.mcpc/mcp.json`.
+- Agent servers are seamlessly indexed by the BM25 search engine and available for tool calls.
+
+### Dedicated discovery commands
+- `mcpc agents`: Shows status, configurations, and asset counts of detected coding assistants.
+- `mcpc plugins [NAME] [--agent AGENT] [--enabled] [--raw]`: Lists or inspects installed agent plugins.
+- `mcpc skills [NAME] [--agent AGENT] [--plugin PLUGIN] [--full] [--raw]`: Lists skills or renders complete `SKILL.md` content.
+
+### Cross-agent deduplication
+- **Skills**: When multiple agents install the same skill (e.g. `nanopi`), `mcpc` automatically merges them into a single record with combined `agents` and preserves all underlying `sources` paths.
+- **Plugins**: Merges skills and MCP servers across duplicate plugin registrations.
+- **Servers**: Deduplicates by canonical endpoint target (URL or command+args), merging tags (`agent:claude-code`, `agent:antigravity`) instead of spinning up duplicate server instances.
+- **Raw View**: Supply `--raw` to bypass deduplication and inspect raw entries.
+
 ## Prompt snippet
 
 Paste this into a system prompt, `AGENTS.md`, or equivalent. It is a short form of the skill (`mcpc install-instruction --skill` prints the full text).

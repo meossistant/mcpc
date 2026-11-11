@@ -235,8 +235,8 @@ Global options go **before** the command: `mcpc --json call ...`, not `mcpc call
 | `mcpc refresh [server...]` | Reconnect and rebuild the cache, in parallel. |
 | `mcpc check [server...]` | Connect and report protocol version, latency and capabilities. Non-zero exit if any server fails. |
 | `mcpc agents` | Show status and asset breakdown of supported coding agents (Claude Code, Antigravity CLI). |
-| `mcpc plugins [NAME] [--agent AGENT] [--enabled]` | List or inspect plugins from coding agents. |
-| `mcpc skills [NAME] [--agent AGENT] [--plugin PLUGIN] [--full]` | List or view skills (`SKILL.md`) from coding agents and plugins. |
+| `mcpc plugins [NAME] [--agent AGENT] [--enabled] [--raw]` | List or inspect plugins from coding agents. Cross-agent duplicates merged by default (`--raw` for all). |
+| `mcpc skills [NAME] [--agent AGENT] [--plugin PLUGIN] [--full] [--raw]` | List or view skills (`SKILL.md`) from coding agents and plugins. Cross-agent duplicates merged by default (`--raw` for all). |
 | `mcpc config` / `mcpc config path` | Merged configuration with each server's source / file locations. |
 | `mcpc trust [-y]` / `mcpc untrust` | Approve or revoke the workspace's servers. |
 | `mcpc daemon start\|stop\|status\|restart` | Control the daemon. |
@@ -257,6 +257,17 @@ $ mcpc call bookshop/search_books -a limit=5
 mcpc: bookshop: invalid arguments for bookshop/search_books:
   - query: 'query' is a required property
 ```
+
+### Coding agents integration & deduplication
+
+`mcpc` can discover and consume MCP servers, plugins, and skills from coding agents (Claude Code, Google Antigravity CLI):
+
+- **Activate agent mode**: Pass `-A all` (or `-A claude-code`, `-A antigravity`) or configure `"agentMode": "all"` in `settings` of `~/.mcpc/mcp.json`.
+- **Cross-agent deduplication**:
+  - **Skills**: When the same skill exists across multiple agents (e.g. `nanopi`), `mcpc` automatically deduplicates them by normalized name, merging their supported agents (`agents: list[str]`) and source file paths (`sources: list[str]`).
+  - **Plugins**: Duplicate plugins merge their skill sets, MCP server definitions, and agent tags.
+  - **MCP Servers**: Servers sharing the same endpoint URL or stdio command/args merge tags (`agent:claude-code`, `agent:antigravity`) to prevent duplicate connections.
+- **Inspect raw items**: Use `--raw` on `mcpc skills` or `mcpc plugins` to inspect all unmerged instances across agent directories.
 
 ## Output and exit codes
 

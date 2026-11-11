@@ -6,7 +6,7 @@ description: Discover and call tools on MCP servers through the `mcpc` command l
 # mcpc: use MCP servers from the shell
 
 `mcpc` talks to the user's configured MCP servers. Tools are addressed as `server/tool`.
-Global options (`--json`, `--workspace`, `--refresh`, `--timeout`, `--no-daemon`, `-v`) go **before** the command: `mcpc --json call ...`.
+Global options (`--json`, `--workspace`, `--refresh`, `--timeout`, `--no-daemon`, `-v`, `-A`/`--agent`) go **before** the command: `mcpc --json call ...`.
 
 ## Workflow
 
@@ -43,6 +43,16 @@ Global options (`--json`, `--workspace`, `--refresh`, `--timeout`, `--no-daemon`
 - `mcpc resources <server>`, `mcpc read <server> <uri>`: server data. `mcpc prompts <server>`, `mcpc prompt <server>/<name> -a k=v`: prompt templates.
 - `mcpc --refresh show <server>` or `mcpc refresh <server>`: reload a stale tool list (the cache lasts 24 hours).
 - `mcpc list --full`: transport, status (`ok`, `error`, `untrusted`, `disabled`, `not cached`), tool counts.
+
+## Coding agents integration
+
+mcpc discovers MCP servers, plugins, and skills from coding agents (Claude Code, Google Antigravity CLI).
+
+- `-A, --agent <all|claude-code|antigravity|none>`: Load servers defined across agents (e.g. `mcpc -A all list`, `mcpc -A all search "..."`).
+- `mcpc agents`: Inspect status, configs, and asset counts of detected coding agents.
+- `mcpc plugins [NAME] [--agent AGENT] [--enabled] [--raw]`: Inspect plugins.
+- `mcpc skills [NAME] [--agent AGENT] [--plugin PLUGIN] [--full] [--raw]`: List skills or print complete SKILL.md content.
+- Deduplication: By default, skills, plugins, and servers shared across agents are deduplicated and merged with combined agent tags and source paths. Use `--raw` to view raw entries.
 
 ## Rules
 
